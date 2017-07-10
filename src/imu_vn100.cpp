@@ -25,7 +25,7 @@ int imu_record();
 string fname = "./imu_vn100.log";
 ofstream* pf = 0; 
 ros::Publisher euler_pub; 
-bool b_publish_rpy = true ;
+bool b_publish_rpy = false ;
 
 int main(int argc, char* argv[])
 {
@@ -103,7 +103,8 @@ int imu_record()
 		&vn100,
 		BINARY_ASYNC_MODE_SERIAL_1,		/* Data will be output on serial port 1. This should be the one we are connected to now. */
 		4,							/* Outputting binary data at 4 Hz (800 Hz on-board filter / 200 = 4 Hz). */
-		BG1_YPR | BG1_ANGULAR_RATE | BG1_ACCEL,
+		// BG1_YPR | BG1_ANGULAR_RATE | BG1_ACCEL | BG1_TIME_STARTUP | BG1_TIME_GPS | BG1_TIME_SYNC_IN, 
+                BG1_YPR | BG1_ANGULAR_RATE | BG1_ACCEL | BG1_TIME_STARTUP,
 		BG3_NONE,
 		BG5_NONE,
 		true);
@@ -140,11 +141,20 @@ int imu_record()
 
 }
 
+// double last_t = 0; 
+// double last_internal_t = 0;
+
 void asyncDataListener(void* sender, VnDeviceCompositeData* data)
 {
-        ros::Time t = ros::Time::now(); 
-	printf(" %i data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", ++cnt, 
-		data->ypr.yaw,
+        static ros::Time t = ros::Time::now();  // used for synchronization 
+        static double last_t = data->timeStartup * 1e-9; 
+        double elaps_s = data->timeStartup * 1e-9 - last_t; 
+
+	printf(" %i timeelaspsed: %f ms data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", ++cnt, 
+		// t.toSec()*1000 - last_t,
+                // data->timeStartup* 1e-6 - last_internal_t,
+                elaps_s*1000., 
+                data->ypr.yaw,
 		data->ypr.pitch,
 		data->ypr.roll, 
                 data->acceleration.c0,
@@ -153,6 +163,19 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
                 data->angularRate.c0, 
                 data->angularRate.c1, 
                 data->angularRate.c2);
+        t.fromSec(t.toSec() + elaps_s); 
+        // ros::Time rt = ros::Time::fromSec(elaps_s); 
+        // t = t + rt; // ros::Time::fromSec(elaps_s); 
+        
+        // last_t = t.toSec()*1000; 
+        last_t = data->timeStartup * 1e-9; 
+        /*printf(" timeStartup: %ld timeGps: %ld timeSyncIn: %ld gpsToSec: %lf gpsToNs: %ld gpsWeek: %d\n", 
+                data->timeStartup, 
+                data->timeGps, 
+                data->timeSyncIn, 
+                data->gpsTowSec,
+                data->gpsTowNs, 
+                data->gpsWeek); */
         if(b_publish_rpy)
         {
           std_msgs::Float32MultiArray msg; 
