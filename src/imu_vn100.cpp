@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <cmath>
 #include "vectornav.h"
 #include "std_msgs/Float32MultiArray.h"
@@ -147,13 +148,14 @@ int imu_record()
 void asyncDataListener(void* sender, VnDeviceCompositeData* data)
 {
         static ros::Time t = ros::Time::now();  // used for synchronization 
-        static double last_t = data->timeStartup * 1e-9; 
-        double elaps_s = data->timeStartup * 1e-9 - last_t; 
+        static unsigned long last_t = data->timeStartup; 
+        unsigned long elaps_s = data->timeStartup - last_t; 
 
-	printf(" %i timeelaspsed: %f ms data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", ++cnt, 
+	printf(" %i startUp %li timeelaspsed: %f ms data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", ++cnt, 
 		// t.toSec()*1000 - last_t,
                 // data->timeStartup* 1e-6 - last_internal_t,
-                elaps_s*1000., 
+                data->timeStartup,
+                elaps_s*1e-6, 
                 data->ypr.yaw,
 		data->ypr.pitch,
 		data->ypr.roll, 
@@ -163,12 +165,16 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
                 data->angularRate.c0, 
                 data->angularRate.c1, 
                 data->angularRate.c2);
-        t.fromSec(t.toSec() + elaps_s); 
+
+        // printf("befor add elaps_s: %lu\n", t.toNSec());
+        // t.fromSec(t.toSec() + elaps_s); 
+        t += ros::Duration(0, elaps_s);
+        // printf("after add elaps_s: %lu\n", t.toNSec());
         // ros::Time rt = ros::Time::fromSec(elaps_s); 
         // t = t + rt; // ros::Time::fromSec(elaps_s); 
         
         // last_t = t.toSec()*1000; 
-        last_t = data->timeStartup * 1e-9; 
+        last_t = data->timeStartup ; 
         /*printf(" timeStartup: %ld timeGps: %ld timeSyncIn: %ld gpsToSec: %lf gpsToNs: %ld gpsWeek: %d\n", 
                 data->timeStartup, 
                 data->timeGps, 
@@ -189,7 +195,11 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
 
         if(pf != 0)
         {
-          (*pf) << std::fixed<< t.toSec()<<"\t"<< 
+          stringstream ss; 
+          ss << t;
+          // ss << t.sec<<"."<<t.nsec;
+          // (*pf) << std::fixed<< t.toSec()<<"\t"<< 
+            (*pf) << std::fixed<< ss.str()<<"\t"<< 
                 data->acceleration.c0 << "\t"<<
                 data->acceleration.c1 << "\t"<<
                 data->acceleration.c2 << "\t"<<
