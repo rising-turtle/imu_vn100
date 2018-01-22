@@ -15,7 +15,8 @@ IMUData g_imu_data;
 bool g_new_data = false; 
 
 /* Change the connection settings to your configuration. */
-const char* const COM_PORT = "//dev//ttyUSB0";
+// const char* const COM_PORT = "//dev//ttyUSB0";
+const char* const COM_PORT = "//dev//ttyIMU";
 const int BAUD_RATE = 115200;
 
 void asyncDataListener(void* sender, VnDeviceCompositeData* data)
