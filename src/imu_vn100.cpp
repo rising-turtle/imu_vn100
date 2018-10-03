@@ -7,13 +7,14 @@
 #include <cmath>
 #include "vectornav.h"
 #include "std_msgs/Float32MultiArray.h"
+#include "sensor_msgs/Imu.h"
 
 using namespace std; 
 
 #define D2R(d) ((d*M_PI)/180.)
 
 /* Change the connection settings to your configuration. */
-const char* const COM_PORT = "//dev//ttyUSB0";
+const char* const COM_PORT[2] = {"//dev//ttyUSB0", "//dev//ttyUSB1"};
 const int BAUD_RATE = 115200;
 static int cnt = 0; 
 
@@ -26,7 +27,12 @@ int imu_record();
 string fname = "./imu_vn100.log";
 ofstream* pf = 0; 
 ros::Publisher euler_pub; 
+ros::Publisher imu_msg_pub; 
+bool b_save_imu = true; 
 bool b_publish_rpy = false ;
+bool b_publish_imu_msg = false; 
+
+int usb01 = 0; 
 
 int main(int argc, char* argv[])
 {
@@ -37,8 +43,11 @@ int main(int argc, char* argv[])
   ros::NodeHandle np("~"); 
   np.param("imu_record_file", fname, fname); 
   np.param("publish_rpy", b_publish_rpy, b_publish_rpy); 
+  np.param("publish_imu_msg", b_publish_imu_msg, b_publish_imu_msg); 
+  np.param("save_imu", b_save_imu, b_save_imu); 
+  np.param("ttyUSB_id", usb01, usb01); 
 
-  if(fname != "")
+  if(b_save_imu && fname != "")
   {
     pf = new ofstream(fname.c_str()); 
     if(!pf->is_open())
@@ -54,6 +63,13 @@ int main(int argc, char* argv[])
     ROS_INFO("publish msg '/euler_msg' ");
     euler_pub = n.advertise<std_msgs::Float32MultiArray>("/euler_msg", 10); 
   }
+  
+  if(b_publish_imu_msg)
+  {
+    ROS_INFO("imu_vn100: publish imu msg /imu0");
+    imu_msg_pub = n.advertise<sensor_msgs::Imu>("/imu0", 1000);  
+  }
+
 
   imu_record(); 
   
@@ -73,7 +89,7 @@ int imu_record()
 
 	errorCode = vn100_connect(
 		&vn100,
-		COM_PORT,
+		COM_PORT[usb01],
 		BAUD_RATE);
 
 	/* Make sure the user has permission to use the COM port. */
@@ -210,6 +226,21 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
 		data->ypr.pitch << "\t"<<
 		data->ypr.roll<< "\t"<< endl; 
         }
+        
+        if(b_publish_imu_msg)
+	{
+	  sensor_msgs::Imu imu_msg; 
+	  imu_msg.header.stamp = t; 
+	  imu_msg.linear_acceleration.x = data->acceleration.c0; 
+	  imu_msg.linear_acceleration.y = data->acceleration.c1; 
+          imu_msg.linear_acceleration.z = data->acceleration.c2; 
+          imu_msg.angular_velocity.x = data->angularRate.c0; 
+	  imu_msg.angular_velocity.y = data->angularRate.c1; 
+	  imu_msg.angular_velocity.z = data->angularRate.c2; 
+	  imu_msg_pub.publish(imu_msg); 
+	  ros::spinOnce(); 
+	}
+
 }
 /*
 void asyncDataListener(void* sender, VnDeviceCompositeData* data)
