@@ -31,6 +31,7 @@ ros::Publisher imu_msg_pub;
 bool b_save_imu = true; 
 bool b_publish_rpy = false ;
 bool b_publish_imu_msg = false; 
+bool b_print_out = true; 
 
 int usb01 = 0; 
 
@@ -46,6 +47,7 @@ int main(int argc, char* argv[])
   np.param("publish_imu_msg", b_publish_imu_msg, b_publish_imu_msg); 
   np.param("save_imu", b_save_imu, b_save_imu); 
   np.param("ttyUSB_id", usb01, usb01); 
+  np.param("print_out", b_print_out, b_print_out); 
 
   if(b_save_imu && fname != "")
   {
@@ -167,6 +169,8 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
         static unsigned long last_t = data->timeStartup; 
         unsigned long elaps_s = data->timeStartup - last_t; 
 
+	if(b_print_out)
+	{
 	printf(" %i startUp %li timeelaspsed: %f ms data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", ++cnt, 
 		// t.toSec()*1000 - last_t,
                 // data->timeStartup* 1e-6 - last_internal_t,
@@ -181,7 +185,7 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
                 data->angularRate.c0, 
                 data->angularRate.c1, 
                 data->angularRate.c2);
-
+	}
         // printf("befor add elaps_s: %lu\n", t.toNSec());
         // t.fromSec(t.toSec() + elaps_s); 
         t += ros::Duration(0, elaps_s);
