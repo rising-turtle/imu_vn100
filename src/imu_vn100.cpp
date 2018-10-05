@@ -169,24 +169,7 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
         static unsigned long last_t = data->timeStartup; 
         unsigned long elaps_s = data->timeStartup - last_t; 
 
-	if(b_print_out)
-	{
-	printf(" %i startUp %li timeelaspsed: %f ms data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", ++cnt, 
-		// t.toSec()*1000 - last_t,
-                // data->timeStartup* 1e-6 - last_internal_t,
-                data->timeStartup,
-                elaps_s*1e-6, 
-                data->ypr.yaw,
-		data->ypr.pitch,
-		data->ypr.roll, 
-                data->acceleration.c0,
-                data->acceleration.c1, 
-                data->acceleration.c2, 
-                data->angularRate.c0, 
-                data->angularRate.c1, 
-                data->angularRate.c2);
-	}
-        // printf("befor add elaps_s: %lu\n", t.toNSec());
+     // printf("befor add elaps_s: %lu\n", t.toNSec());
         // t.fromSec(t.toSec() + elaps_s); 
         t += ros::Duration(0, elaps_s);
         // printf("after add elaps_s: %lu\n", t.toNSec());
@@ -202,7 +185,27 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
                 data->gpsTowSec,
                 data->gpsTowNs, 
                 data->gpsWeek); */
-        if(b_publish_rpy)
+        double rt = t.toSec(); 
+
+	if(b_print_out)
+	{
+	printf(" %i startUp %li timeelaspsed: %f ms data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", ++cnt, 
+		// t.toSec()*1000 - last_t,
+                // data->timeStartup* 1e-6 - last_internal_t,
+                // data->timeStartup,
+		rt,
+                elaps_s*1e-6, 
+                data->ypr.yaw,
+		data->ypr.pitch,
+		data->ypr.roll, 
+                data->acceleration.c0,
+                data->acceleration.c1, 
+                data->acceleration.c2, 
+                data->angularRate.c0, 
+                data->angularRate.c1, 
+                data->angularRate.c2);
+	}
+           if(b_publish_rpy)
         {
           std_msgs::Float32MultiArray msg; 
           msg.data.resize(3); 
