@@ -23,6 +23,9 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
 {
   IMUData imu(data->ypr.roll, data->ypr.pitch, data->ypr.yaw, 
               data->acceleration.c0, data->acceleration.c1, data->acceleration.c2); 
+  static unsigned long st = data->timeStartup; 
+  unsigned long cur_t = data->timeStartup; 
+  imu.melapsed_time = (cur_t - st)*1e-6; 
 
   g_buf_mutex.lock();
     g_imu_data = imu; 

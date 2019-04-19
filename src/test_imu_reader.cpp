@@ -11,10 +11,10 @@ int main(int argc, char* argv[])
 {
   CIMUReader imu_reader; 
   
-  for(int i=0; i<100; i++)
+  for(int i=0; i<=400; i++)
   {
     IMUData d = imu_reader.getNewIMUData(); 
-    printf(" %d data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", i, d.mroll, 
+    printf(" %d elapsed time = %lf data:  %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", i, d.melapsed_time, d.mroll, 
           d.mpitch, d.myaw, d.max, d.may, d.maz);
   }
 

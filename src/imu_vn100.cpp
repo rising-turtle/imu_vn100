@@ -166,10 +166,12 @@ int imu_record()
 void asyncDataListener(void* sender, VnDeviceCompositeData* data)
 {
         static ros::Time t = ros::Time::now();  // used for synchronization 
-        static unsigned long last_t = data->timeStartup; 
+        // static unsigned long last_t = data->timeStartup; 
+	static unsigned long last_t = data->timeStartup; 
+	static unsigned long start_t = last_t; 
         unsigned long elaps_s = data->timeStartup - last_t; 
 
-     // printf("befor add elaps_s: %lu\n", t.toNSec());
+	// printf("befor add elaps_s: %lu\n", t.toNSec());
         // t.fromSec(t.toSec() + elaps_s); 
         t += ros::Duration(0, elaps_s);
         // printf("after add elaps_s: %lu\n", t.toNSec());
@@ -189,11 +191,12 @@ void asyncDataListener(void* sender, VnDeviceCompositeData* data)
 
 	if(b_print_out)
 	{
-	printf(" %i startUp %li timeelaspsed: %f ms data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", ++cnt, 
+	printf(" %i currenttime: %lf timeelapsed: %lf ms timeinterval: %lf ms data: %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f %+#7.2f\n", ++cnt, 
 		// t.toSec()*1000 - last_t,
                 // data->timeStartup* 1e-6 - last_internal_t,
                 // data->timeStartup,
 		rt,
+		(data->timeStartup - start_t)*1e-6, 
                 elaps_s*1e-6, 
                 data->ypr.yaw,
 		data->ypr.pitch,

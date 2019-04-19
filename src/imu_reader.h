@@ -23,6 +23,7 @@ class IMUData
   public:
     double max, may, maz;
     double mroll, mpitch, myaw; 
+    double melapsed_time; // ms 
     IMUData(){}
     IMUData(double r, double p, double yaw, double ax, double ay, double az):
       max(ax), may(ay), maz(az), mroll(r), mpitch(p), myaw(yaw){}
